@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "SLOVO",
+    "slug": "slovo",
+    "scheme": "slovo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0D12",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.slovo.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Zum Aufnehmen deiner Aussprache für das Aussprachetraining.",
+        "NSSpeechRecognitionUsageDescription": "Zur Analyse deiner russischen Aussprache."
+      }
+    },
+    "android": {
+      "package": "com.slovo.app",
+      "versionCode": 1,
+      "edgeToEdgeEnabled": true,
+      "permissions": ["RECORD_AUDIO"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "SLOVO"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#8B7BFF"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

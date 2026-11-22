@@ -1,0 +1,71 @@
+name: iOS unsigned IPA
+
+# Builds an UNSIGNED .ipa on a macOS runner. Useful without an Apple account:
+# the artifact must still be signed (e.g. Sideloadly/AltStore with your own
+# Apple ID) before it can be installed on a device.
+on:
+  workflow_dispatch:
+
+env:
+  CI: "1"
+  EXPO_NO_TELEMETRY: "1"
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install JS dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate iOS project
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Resolve workspace and scheme
+        id: xcode
+        working-directory: ios
+        run: |
+          WORKSPACE=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | awk '/Schemes:/{getline; gsub(/^[ \t]+/, ""); print; exit}')
+          test -n "$SCHEME"
+          echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
+          echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
+          echo "Using $WORKSPACE / $SCHEME"
+
+      - name: Archive without code signing
+        working-directory: ios
+        run: |
+          xcodebuild \
+            -workspace "${{ steps.xcode.outputs.workspace }}" \
+            -scheme "${{ steps.xcode.outputs.scheme }}" \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath build/SLOVO.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p build/Payload
+          cp -R ios/build/SLOVO.xcarchive/Products/Applications/SLOVO.app build/Payload/
+          cd build
+          zip -qry ../SLOVO-unsigned.ipa Payload
+          ls -lh ../SLOVO-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SLOVO-unsigned-ipa
+          path: SLOVO-unsigned.ipa
+          if-no-files-found: error
