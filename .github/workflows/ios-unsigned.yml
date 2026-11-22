@@ -39,8 +39,8 @@ jobs:
           # The app scheme is the workspace name; the first listed scheme can be a Pod (e.g. boost).
           SCHEME="${WORKSPACE%.xcworkspace}"
           xcodebuild -workspace "$WORKSPACE" -list
-          echo "$SCHEME" | grep -qx . || { echo "No scheme name derived"; exit 1; }
-          xcodebuild -workspace "$WORKSPACE" -list | grep -qE "^[[:space:]]*${SCHEME}$" || { echo "Scheme $SCHEME not found in workspace"; exit 1; }
+          test -n "$SCHEME" || { echo "No scheme name derived"; exit 1; }
+          xcodebuild -workspace "$WORKSPACE" -list | grep -qE "^[[:space:]]*${SCHEME}[[:space:]]*$" || { echo "Scheme $SCHEME not found in workspace"; exit 1; }
           echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
           echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
           echo "Using $WORKSPACE / $SCHEME"
