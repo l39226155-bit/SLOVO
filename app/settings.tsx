@@ -337,7 +337,7 @@ export default function SettingsScreen() {
           <View>
             <SectionLabel>Über</SectionLabel>
             <Text variant="caption" tone="tertiary">
-              SLOVO 1.0 · A0–A1 · 12 Lektionen · 144 Vokabeln · 33 Buchstaben · 14 Grammatikthemen · 5 Geschichten · 10
+              SLOVO 2.0 · A0–C1 · 20 Lektionen · 184 Vokabeln · 33 Buchstaben · 18 Grammatikthemen · 5 Geschichten · 10
               Alltagssituationen. Erinnerungen werden lokal auf dem Gerät geplant.
             </Text>
           </View>

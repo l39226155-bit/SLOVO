@@ -11,6 +11,10 @@ import { personalDifficulty } from '../src/services/personal';
 import { dailyChallenges } from '../src/services/challenges';
 import { estimateLevel } from '../src/services/adaptive';
 import { newCard, schedule } from '../src/services/srs';
+import { chapters, lessons } from '../src/data/course';
+import { vocabById } from '../src/data/vocabulary';
+import { dictionaryById } from '../src/data/dictionary';
+import { achievements, xpLevel } from '../src/store/selectors';
 import type { Activity, LessonRecord, Profile, SrsCard } from '../src/store/types';
 
 let failures = 0;
@@ -127,6 +131,49 @@ for (let index = 0; index < 60; index += 1) {
 }
 const boosted = estimateLevel({ profile: { ...profile, level: 'A0' }, lessons: {}, cards: masteredCards, activities: [] });
 check('60 mastered cards raise the level', boosted.level === 'A1', boosted.level);
+
+// ── Course A2–C1 ───────────────────────────────────────────────────────────
+const levels = new Set(chapters.map((chapter) => chapter.level));
+check('course covers A0–C1', ['A0', 'A1', 'A2', 'B1', 'B2', 'C1'].every((level) => levels.has(level as never)), [...levels].join(','));
+check('course has 20 lessons', lessons.length === 20, String(lessons.length));
+
+const brokenVocab = lessons.flatMap((lesson) => lesson.vocabIds.filter((id) => !vocabById[id]));
+check('every lesson word exists', brokenVocab.length === 0, brokenVocab.join(','));
+
+const thinLessons = lessons.filter((lesson) => lesson.exercises.length < 4 || lesson.vocabIds.length < 4);
+check('every lesson is complete', thinLessons.length === 0, thinLessons.map((lesson) => lesson.id).join(','));
+
+const advanced = lessons.filter((lesson) => vocabById[lesson.vocabIds[0]]?.level !== 'A0' && vocabById[lesson.vocabIds[0]]?.level !== 'A1');
+check('eight A2–C1 lessons exist', advanced.length === 8, String(advanced.length));
+check('dictionary includes new course words', Boolean(dictionaryById['v_poezd']) && dictionaryById['v_poezd'].de === 'Zug');
+
+// ── SRS 2.0 ────────────────────────────────────────────────────────────────
+const forgotten = newCard('v_poezd');
+let leech = forgotten;
+for (let index = 0; index < 4; index += 1) leech = schedule(leech, 'v_poezd', 'again');
+leech = schedule(leech, 'v_poezd', 'good');
+check('forgotten words stay on a short interval', leech.intervalDays <= 14, String(leech.intervalDays));
+
+let healthy = newCard('v_bilet');
+const intervals: number[] = [];
+for (let index = 0; index < 3; index += 1) {
+  healthy = schedule(healthy, 'v_bilet', 'good');
+  intervals.push(healthy.intervalDays);
+}
+check('stable words get growing intervals', intervals[0] < intervals[1] && intervals[1] <= intervals[2], intervals.join(','));
+
+// ── XP and achievements ────────────────────────────────────────────────────
+check('XP starts at level 1', xpLevel(0).level === 1);
+check('250 XP reach level 2', xpLevel(250).level === 2, String(xpLevel(250).level));
+const badges = achievements({ lessons: {}, cards: {}, activities: [], reviewLog: [] });
+check('achievements start locked', badges.length === 6 && badges.every((badge) => !badge.earned));
+const firstBadge = achievements({
+  lessons: { l_a0_1_1: { lessonId: 'l_a0_1_1', completedAt: today, bestScore: 100, attempts: 1, xp: 15 } },
+  cards: {},
+  activities: [],
+  reviewLog: [],
+});
+check('first lesson unlocks its badge', firstBadge.find((badge) => badge.id === 'first_lesson')?.earned === true);
 
 console.log(`\n${failures === 0 ? 'All feature checks passed.' : `${failures} check(s) failed.`}`);
 if (failures > 0) process.exit(1);

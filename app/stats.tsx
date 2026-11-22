@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Divider, ListRow, Metric, ProgressBar, Screen, SectionLabel, Text } from '@/components/ui';
+import { Button, Divider, ListRow, Metric, ProgressBar, Screen, SectionLabel, Surface, Text } from '@/components/ui';
 import { ScreenHeader } from '@/components/ui';
 import { colors, spacing } from '@/theme/tokens';
 import { courseProgress } from '@/data/course';
@@ -9,7 +9,9 @@ import { formatMinutes } from '@/services/format';
 import { useAppStore } from '@/store/useAppStore';
 import {
   accuracyByKind,
+  achievements,
   currentStreak,
+  levelProgress,
   KIND_LABELS,
   learnedWordCount,
   masteredWordCount,
@@ -20,6 +22,7 @@ import {
   weakWords,
   weekMinutes,
   weekSeries,
+  xpLevel,
 } from '@/store/selectors';
 
 export default function StatsScreen() {
@@ -27,6 +30,12 @@ export default function StatsScreen() {
   const activities = useAppStore((state) => state.activities);
   const lessons = useAppStore((state) => state.lessons);
   const cards = useAppStore((state) => state.cards);
+  const reviewLog = useAppStore((state) => state.reviewLog);
+
+  const xp = totalXp(activities);
+  const level = xpLevel(xp);
+  const levels = levelProgress(lessons);
+  const badges = achievements({ lessons, cards, activities, reviewLog });
 
   const week = useMemo(() => weekSeries(activities), [activities]);
   const max = Math.max(10, ...week.map((day) => day.minutes));
@@ -63,6 +72,19 @@ export default function StatsScreen() {
               <Metric value={formatMinutes(weekMinutes(activities))} label="diese Woche" />
               <Metric value={`${currentStreak(activities)}`} label="Tage Serie" />
             </View>
+
+            <Surface style={{ gap: spacing.sm }} tone="accent">
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <Text variant="headline">Level {level.level}</Text>
+                <Text variant="caption" tone="secondary">
+                  {xp} XP
+                </Text>
+              </View>
+              <ProgressBar value={level.ratio} height={3} />
+              <Text variant="caption" tone="secondary">
+                {level.into} von {level.span} XP in diesem Level
+              </Text>
+            </Surface>
 
             <View>
               <SectionLabel>Letzte sieben Tage</SectionLabel>
@@ -120,9 +142,48 @@ export default function StatsScreen() {
               <Divider />
               <ListRow title="Trefferquote" value={`${Math.round(overallAccuracy(activities) * 100)} %`} />
               <Divider />
+              <ListRow title="Fehlerquote" value={`${Math.round((1 - overallAccuracy(activities)) * 100)} %`} />
+              <Divider />
               <ListRow title="Wörter im Training" value={String(learnedWordCount({ cards }))} />
               <Divider />
               <ListRow title="Gefestigt" value={String(masteredWordCount({ cards }))} />
+            </View>
+
+            <View>
+              <SectionLabel>Niveaus</SectionLabel>
+              {levels.map((entry) => (
+                <View key={entry.level} style={{ gap: 6, paddingVertical: spacing.sm }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text variant="caption" tone="secondary">
+                      {entry.level}
+                    </Text>
+                    <Text variant="caption" tone="tertiary">
+                      {entry.total === 0 ? '—' : `${entry.done}/${entry.total}`}
+                    </Text>
+                  </View>
+                  <ProgressBar value={entry.ratio} height={3} />
+                </View>
+              ))}
+            </View>
+
+            <View>
+              <SectionLabel>Erfolge</SectionLabel>
+              {badges.map((badge) => (
+                <View key={badge.id} style={{ paddingVertical: spacing.sm, gap: 6 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md }}>
+                    <Text variant="caption" tone={badge.earned ? 'default' : 'tertiary'} style={{ flex: 1 }}>
+                      {badge.title}
+                    </Text>
+                    <Text variant="caption" tone={badge.earned ? 'success' : 'tertiary'}>
+                      {badge.earned ? 'Erreicht' : `${Math.round(badge.progress * 100)} %`}
+                    </Text>
+                  </View>
+                  <Text variant="micro" tone="tertiary">
+                    {badge.description}
+                  </Text>
+                  <ProgressBar value={badge.progress} height={2} color={badge.earned ? colors.success : colors.accent} />
+                </View>
+              ))}
             </View>
 
             {categories.length > 0 ? (

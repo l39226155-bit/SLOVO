@@ -1,4 +1,5 @@
 import type { GrammarTopic } from '@/data/types';
+import { advancedGrammar } from '@/data/advanced';
 
 /** Grammar reference with examples and exercises. German explanations. */
 export const grammarTopics: GrammarTopic[] = [
@@ -806,6 +807,7 @@ export const grammarTopics: GrammarTopic[] = [
       },
     ],
   },
+  ...advancedGrammar,
 ];
 
 export const grammarBySlug: Record<string, GrammarTopic> = Object.fromEntries(

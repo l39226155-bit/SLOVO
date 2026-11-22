@@ -1,4 +1,5 @@
 import type { Gender, Level, Vocab, WordType } from '@/data/types';
+import { advancedVocab } from '@/data/advanced';
 
 type Extra = { gender?: Gender; grammar?: string; tags?: string[]; note?: string };
 
@@ -26,7 +27,7 @@ const w = (
 });
 
 /** A0/A1 core vocabulary — greetings, people, everyday objects, verbs, adjectives. */
-export const vocabulary: Vocab[] = [
+const baseVocabulary: Vocab[] = [
   // --- Begrüßung & Höflichkeit -------------------------------------------
   w('v_privet', 'приве́т', 'hallo (informell)', 'priwjét', 'phrase', 'A0', 'Приве́т, как дела́?', 'Hallo, wie geht’s?', { tags: ['begrüßung'] }),
   w('v_zdravstvuyte', 'здра́вствуйте', 'guten Tag (formell)', 'sdrástwujte', 'phrase', 'A0', 'Здра́вствуйте, меня́ зову́т А́нна.', 'Guten Tag, ich heiße Anna.', { tags: ['begrüßung'], note: 'Das „в“ wird nicht gesprochen.' }),
@@ -187,6 +188,9 @@ export const vocabulary: Vocab[] = [
   w('v_schet_pozhaluysta', 'счёт, пожа́луйста', 'die Rechnung, bitte', 'ščot pažálusta', 'phrase', 'A1', 'Официа́нт, счёт, пожа́луйста.', 'Herr Ober, die Rechnung bitte.', { tags: ['restaurant'] }),
   w('v_ya_khochu', 'я хочу́', 'ich möchte', 'ja chačú', 'phrase', 'A0', 'Я хочу́ во́ду.', 'Ich möchte Wasser.', { tags: ['restaurant'] }),
 ];
+
+/** Base course words plus the A2–C1 extension. */
+export const vocabulary: Vocab[] = [...baseVocabulary, ...advancedVocab];
 
 export const vocabById: Record<string, Vocab> = Object.fromEntries(
   vocabulary.map((entry) => [entry.id, entry]),

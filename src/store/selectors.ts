@@ -1,3 +1,4 @@
+import { chapters, lessons } from '@/data/course';
 import { vocabById } from '@/data/vocabulary';
 import { dayKey, weekdayShort } from '@/services/format';
 import { isDue, isMastered, strength } from '@/services/srs';
@@ -93,9 +94,11 @@ export function masteredWordCount(state: Pick<AppState, 'cards'>): number {
 }
 
 export function dueCards(state: Pick<AppState, 'cards'>, now = new Date()): SrsCard[] {
+  // Weak words first: a card forgotten often should not wait behind a card that
+  // is only a few minutes overdue but already stable.
   return Object.values(state.cards)
     .filter((card) => isDue(card, now))
-    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+    .sort((a, b) => strength(a) - strength(b) || new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
 }
 
 export function weakWords(state: Pick<AppState, 'cards'>, limit = 5) {
@@ -158,4 +161,91 @@ export function streakLabel(streak: number): string {
   if (streak === 0) return 'Starte heute';
   if (streak === 1) return '1 Tag';
   return `${streak} Tage`;
+}
+
+/** Level curve: 250 XP per level, gently rising, shown on home and stats. */
+export function xpLevel(totalXp: number): { level: number; into: number; span: number; ratio: number } {
+  let level = 1;
+  let remaining = Math.max(0, totalXp);
+  let span = 250;
+  while (remaining >= span) {
+    remaining -= span;
+    level += 1;
+    span = Math.round(span * 1.15);
+  }
+  return { level, into: remaining, span, ratio: span === 0 ? 0 : remaining / span };
+}
+
+/** Share of lessons completed per CEFR level, used for the progress breakdown. */
+export function levelProgress(completed: Record<string, { bestScore: number }>) {
+  const levels = ['A0', 'A1', 'A2', 'B1', 'B2', 'C1'] as const;
+  return levels.map((level) => {
+    const levelLessons = lessons.filter((lesson) => chapters.find((chapter) => chapter.id === lesson.chapterId)?.level === level);
+    const done = levelLessons.filter((lesson) => Boolean(completed[lesson.id])).length;
+    return { level, done, total: levelLessons.length, ratio: levelLessons.length === 0 ? 0 : done / levelLessons.length };
+  });
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  earned: boolean;
+  progress: number;
+}
+
+/** Every badge is derived from real stored progress — nothing is simulated. */
+export function achievements(state: Pick<AppState, 'lessons' | 'cards' | 'activities' | 'reviewLog'>): Achievement[] {
+  const completed = Object.keys(state.lessons).length;
+  const words = Object.keys(state.cards).length;
+  const accuracy = overallAccuracy(state.activities);
+  const answered = state.activities.reduce((sum, activity) => sum + activity.total, 0);
+  const streak = currentStreak(state.activities);
+  const perfect = Object.values(state.lessons).some((lesson) => lesson.bestScore >= 100);
+  const reviewed = state.reviewLog.length;
+
+  return [
+    {
+      id: 'first_lesson',
+      title: 'Erste Lektion',
+      description: 'Eine Lektion abgeschlossen',
+      earned: completed >= 1,
+      progress: Math.min(1, completed),
+    },
+    {
+      id: 'streak_7',
+      title: 'Sieben Tage',
+      description: 'Sieben Tage in Folge gelernt',
+      earned: streak >= 7,
+      progress: Math.min(1, streak / 7),
+    },
+    {
+      id: 'words_50',
+      title: '50 Wörter',
+      description: '50 Wörter im Training',
+      earned: words >= 50,
+      progress: Math.min(1, words / 50),
+    },
+    {
+      id: 'accuracy_90',
+      title: 'Sicher',
+      description: '90 % Trefferquote ab 50 Antworten',
+      earned: answered >= 50 && accuracy >= 0.9,
+      progress: Math.min(1, (answered >= 50 ? accuracy : answered / 50) * 1),
+    },
+    {
+      id: 'reviews_500',
+      title: '500 Wiederholungen',
+      description: '500 Karten bewertet',
+      earned: reviewed >= 500,
+      progress: Math.min(1, reviewed / 500),
+    },
+    {
+      id: 'perfect_lesson',
+      title: 'Fehlerfrei',
+      description: 'Eine Lektion mit 100 % abgeschlossen',
+      earned: perfect,
+      progress: perfect ? 1 : 0,
+    },
+  ];
 }

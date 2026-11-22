@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Divider, ListRow, Metric, ProgressBar, Screen, SectionLabel, Surface, Text } from '@/components/ui';
+import { Button, Divider, ListRow, Metric, ProgressBar, Reveal, Screen, SectionLabel, Surface, Text } from '@/components/ui';
 import { colors, spacing } from '@/theme/tokens';
 import { chapterById, courseProgress, nextLesson } from '@/data/course';
 import { challengeSummary, dailyChallenges } from '@/services/challenges';
@@ -16,6 +16,7 @@ import {
   todayGoal,
   totalXp,
   weekSeries,
+  xpLevel,
 } from '@/store/selectors';
 
 export default function HomeScreen() {
@@ -40,6 +41,7 @@ export default function HomeScreen() {
     [activities, cards, claims, profile],
   );
   const challengeStats = challengeSummary(challenges);
+  const level = xpLevel(totalXp(activities));
   const plan = useMemo(
     () =>
       dailyPlan(
@@ -61,6 +63,22 @@ export default function HomeScreen() {
             {profile?.name ? `, ${profile.name}` : ''}
           </Text>
         </View>
+
+        {/* Level ------------------------------------------------------------- */}
+        <Reveal>
+          <Surface style={{ gap: spacing.sm }} tone="accent">
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <Text variant="headline">Level {level.level}</Text>
+              <Text variant="caption" tone="secondary">
+                {level.into} / {level.span} XP
+              </Text>
+            </View>
+            <ProgressBar value={level.ratio} height={3} />
+            <Text variant="caption" tone="secondary">
+              Noch {level.span - level.into} XP bis Level {level.level + 1}
+            </Text>
+          </Surface>
+        </Reveal>
 
         {/* Continue ---------------------------------------------------------- */}
         {next ? (

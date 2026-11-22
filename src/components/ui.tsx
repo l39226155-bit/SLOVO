@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,8 +26,8 @@ export type TextVariant = 'display' | 'title' | 'headline' | 'body' | 'caption' 
 export type TextTone = 'default' | 'secondary' | 'tertiary' | 'accent' | 'success' | 'danger' | 'warning';
 
 const variants: Record<TextVariant, TextStyle> = {
-  display: { fontSize: typeScale.display, fontWeight: '700', letterSpacing: -0.6, lineHeight: 34 },
-  title: { fontSize: typeScale.title, fontWeight: '600', letterSpacing: -0.35, lineHeight: 28 },
+  display: { fontSize: typeScale.display, fontWeight: '700', letterSpacing: -1, lineHeight: 38 },
+  title: { fontSize: typeScale.title, fontWeight: '600', letterSpacing: -0.5, lineHeight: 30 },
   headline: { fontSize: typeScale.headline, fontWeight: '600', letterSpacing: -0.15, lineHeight: 23 },
   body: { fontSize: typeScale.body, fontWeight: '400', lineHeight: 22 },
   caption: { fontSize: typeScale.caption, fontWeight: '400', lineHeight: 18 },
@@ -172,6 +173,43 @@ export function Surface({
     <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}>
       {content}
     </Pressable>
+  );
+}
+
+/* --------------------------------------------------------------- motion */
+
+/** Short fade-and-rise used for dashboard sections; disabled visually on web. */
+export function Reveal({
+  children,
+  delay = 0,
+  style,
+}: {
+  children: ReactNode;
+  delay?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: motion.base + delay * 70,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  }, [delay, progress]);
+
+  return (
+    <Animated.View
+      style={[
+        {
+          opacity: progress,
+          transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }],
+        },
+        style,
+      ]}
+    >
+      {children}
+    </Animated.View>
   );
 }
 
@@ -520,10 +558,15 @@ export function Row({ children, gap = spacing.md, style }: { children: ReactNode
 
 const styles = StyleSheet.create({
   surface: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceRaised,
     borderRadius: radii.lg,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+    shadowColor: '#000000',
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 2,
   },
   button: {
     height: 52,

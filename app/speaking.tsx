@@ -20,13 +20,19 @@ interface Phrase {
 export default function SpeakingScreen() {
   const router = useRouter();
   const recordActivity = useAppStore((state) => state.recordActivity);
-  const [filter, setFilter] = useState<'basis' | 'reisen'>('basis');
+  const [filter, setFilter] = useState<'basis' | 'reisen' | 'fortgeschritten'>('basis');
   const [index, setIndex] = useState(0);
   const [recording, setRecording] = useState(false);
   const [result, setResult] = useState<{ score: number; missed: string[]; heard: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const phrases = useMemo<Phrase[]>(() => {
+    if (filter === 'fortgeschritten') {
+      return vocabulary
+        .filter((entry) => entry.level === 'A2' || entry.level === 'B1' || entry.level === 'B2' || entry.level === 'C1')
+        .slice(0, 16)
+        .map((entry) => ({ id: `adv-${entry.id}`, ru: entry.example.ru, de: entry.example.de, source: `${entry.level} · ${entry.de}` }));
+    }
     if (filter === 'reisen') {
       return scenarios.flatMap((scenario) =>
         scenario.keyPhrases.map((phrase, phraseIndex) => ({
@@ -87,6 +93,7 @@ export default function SpeakingScreen() {
           options={[
             { value: 'basis', label: 'Grundlagen' },
             { value: 'reisen', label: 'Reisen' },
+            { value: 'fortgeschritten', label: 'A2–C1' },
           ]}
           value={filter}
           onChange={(value) => {
@@ -107,7 +114,14 @@ export default function SpeakingScreen() {
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xl }}>
-          <AudioButton text={phrase.ru} audioKey={`speaking-${phrase.id}`} size="lg" rate={0.75} accessibilityLabel="Modell anhören" />
+          <View style={{ alignItems: 'center', gap: 4 }}>
+            <AudioButton text={phrase.ru} audioKey={`speaking-slow-${phrase.id}`} size="lg" rate={0.7} accessibilityLabel="Langsam anhören" />
+            <Text variant="micro" tone="tertiary">Langsam</Text>
+          </View>
+          <View style={{ alignItems: 'center', gap: 4 }}>
+            <AudioButton text={phrase.ru} audioKey={`speaking-normal-${phrase.id}`} size="lg" rate={1} accessibilityLabel="Normal anhören" />
+            <Text variant="micro" tone="tertiary">Normal</Text>
+          </View>
           <Pressable
             disabled={!supported || recording}
             onPress={record}
@@ -150,6 +164,11 @@ export default function SpeakingScreen() {
             {result.heard ? (
               <Text variant="caption" tone="tertiary">
                 Erkannt: {result.heard}
+              </Text>
+            ) : null}
+            {result.missed.length === 0 ? (
+              <Text variant="caption" tone="success">
+                Alle Wörter erkannt
               </Text>
             ) : null}
             {result.missed.length > 0 ? (

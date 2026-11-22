@@ -12,6 +12,7 @@ import type {
   PersonalWord,
   Profile,
   Reminders,
+  ReviewLogEntry,
   Settings,
   SrsCard,
 } from '@/store/types';
@@ -55,6 +56,7 @@ export interface AppState {
   collections: Collection[];
   challengeClaims: Record<string, string>;
   activities: Activity[];
+  reviewLog: ReviewLogEntry[];
   settings: Settings;
 
   setHydrated: (value: boolean) => void;
@@ -109,6 +111,7 @@ const emptyProgress = {
   collections: [] as Collection[],
   challengeClaims: {} as Record<string, string>,
   activities: [] as Activity[],
+  reviewLog: [] as ReviewLogEntry[],
 };
 
 function uid(prefix: string) {
@@ -189,12 +192,22 @@ export const useAppStore = create<AppState>()(
       },
 
       gradeCard: (vocabId, grade) =>
-        set((state) => ({
-          cards: {
-            ...state.cards,
-            [vocabId]: schedule(state.cards[vocabId], vocabId, grade),
-          },
-        })),
+        set((state) => {
+          const previous = state.cards[vocabId];
+          const entry: ReviewLogEntry = {
+            vocabId,
+            grade,
+            at: new Date().toISOString(),
+            previousIntervalDays: previous?.intervalDays ?? 0,
+          };
+          return {
+            cards: {
+              ...state.cards,
+              [vocabId]: schedule(previous, vocabId, grade),
+            },
+            reviewLog: [entry, ...state.reviewLog].slice(0, 2000),
+          };
+        }),
 
       ensureCards: (vocabIds) =>
         set((state) => {
@@ -345,6 +358,7 @@ export const useAppStore = create<AppState>()(
         collections: state.collections,
         challengeClaims: state.challengeClaims,
         activities: state.activities,
+        reviewLog: state.reviewLog,
         settings: state.settings,
       }),
       /**

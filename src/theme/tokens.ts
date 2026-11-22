@@ -5,19 +5,19 @@
  */
 
 export const colors = {
-  bg: '#0A0B0D',
-  surface: '#111214',
-  surfaceRaised: '#17191C',
-  border: 'rgba(255,255,255,0.075)',
-  borderStrong: 'rgba(255,255,255,0.16)',
+  bg: '#090B10',
+  surface: '#10141C',
+  surfaceRaised: '#171C26',
+  border: 'rgba(255,255,255,0.07)',
+  borderStrong: 'rgba(255,255,255,0.15)',
 
-  text: '#F2F3F5',
-  textSecondary: '#9CA3AD',
-  textTertiary: '#6C737D',
+  text: '#F5F5FA',
+  textSecondary: '#9298A8',
+  textTertiary: '#6B7280',
 
-  accent: '#8B7BFF',
-  accentPressed: '#7A69F2',
-  accentSoft: 'rgba(139,123,255,0.12)',
+  accent: '#8B7CFF',
+  accentPressed: '#7A6BEE',
+  accentSoft: 'rgba(139,124,255,0.13)',
 
   success: '#5FBF94',
   successSoft: 'rgba(95,191,148,0.12)',
@@ -39,15 +39,16 @@ export const spacing = {
 } as const;
 
 export const radii = {
-  sm: 8,
-  md: 12,
-  lg: 16,
+  sm: 10,
+  md: 14,
+  lg: 20,
+  xl: 26,
   pill: 999,
 } as const;
 
 export const type = {
-  display: 28,
-  title: 22,
+  display: 32,
+  title: 24,
   headline: 17,
   body: 15,
   caption: 13,

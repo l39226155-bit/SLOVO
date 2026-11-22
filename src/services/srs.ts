@@ -15,6 +15,10 @@ const QUALITY: Record<Grade, number> = {
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** First "again" comes back after 10 minutes, not a full day. */
 const RELEARN_MS = 10 * 60 * 1000;
+/** A word forgotten four times stops growing: it must be recalled again soon. */
+const LEECH_LAPSES = 4;
+const LEECH_MAX_INTERVAL = 14;
+const MAX_INTERVAL = 365;
 
 export function newCard(vocabId: string, now = new Date()): SrsCard {
   return {
@@ -37,13 +41,16 @@ export function schedule(card: SrsCard | undefined, vocabId: string, grade: Grad
   ease = Math.min(2.8, Math.max(1.3, Number(ease.toFixed(2))));
 
   if (grade === 'again') {
+    const lapses = base.lapses + 1;
+    // Words forgotten repeatedly come back faster and stay short-interval.
+    const relearn = lapses >= LEECH_LAPSES ? 5 * 60 * 1000 : RELEARN_MS;
     return {
       ...base,
-      ease,
+      ease: Math.max(1.3, ease - 0.08),
       reps: 0,
-      lapses: base.lapses + 1,
+      lapses,
       intervalDays: 0,
-      dueAt: new Date(now.getTime() + RELEARN_MS).toISOString(),
+      dueAt: new Date(now.getTime() + relearn).toISOString(),
       lastGrade: grade,
       lastReviewedAt: now.toISOString(),
     };
@@ -52,13 +59,16 @@ export function schedule(card: SrsCard | undefined, vocabId: string, grade: Grad
   const reps = base.reps + 1;
   let intervalDays: number;
   if (reps === 1) {
-    intervalDays = grade === 'easy' ? 3 : 1;
+    intervalDays = grade === 'easy' ? 3 : grade === 'hard' ? 1 : 1;
   } else if (reps === 2) {
-    intervalDays = grade === 'easy' ? 6 : 3;
+    intervalDays = grade === 'easy' ? 6 : grade === 'hard' ? 2 : 3;
   } else {
-    const multiplier = grade === 'hard' ? 1.2 : grade === 'easy' ? ease * 1.3 : ease;
+    const multiplier = grade === 'hard' ? 1.15 : grade === 'easy' ? ease * 1.3 : ease;
     intervalDays = Math.max(1, Math.round(Math.max(base.intervalDays, 1) * multiplier));
   }
+
+  if (base.lapses >= LEECH_LAPSES) intervalDays = Math.min(intervalDays, LEECH_MAX_INTERVAL);
+  intervalDays = Math.min(MAX_INTERVAL, intervalDays);
 
   return {
     ...base,

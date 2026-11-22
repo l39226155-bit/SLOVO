@@ -47,6 +47,14 @@ export interface SrsCard {
   lastReviewedAt: string;
 }
 
+export interface ReviewLogEntry {
+  vocabId: string;
+  grade: Grade;
+  at: string;
+  /** Interval before this review, so a forgotten word is traceable. */
+  previousIntervalDays: number;
+}
+
 export interface Activity {
   id: string;
   at: string;

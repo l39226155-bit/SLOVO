@@ -1,4 +1,5 @@
 import type { Chapter, Exercise, Lesson } from '@/data/types';
+import { advancedChapters, advancedLessons } from '@/data/advanced';
 
 export const chapters: Chapter[] = [
   { id: 'c_a0_1', level: 'A0', title: 'Первые слова', subtitle: 'Begrüßen und vorstellen', glyph: '👋' },
@@ -7,6 +8,7 @@ export const chapters: Chapter[] = [
   { id: 'c_a1_1', level: 'A1', title: 'Мой день', subtitle: 'Tagesablauf und Verben', glyph: '☀️' },
   { id: 'c_a1_2', level: 'A1', title: 'В городе', subtitle: 'Unterwegs und einkaufen', glyph: '🏙️' },
   { id: 'c_a1_3', level: 'A1', title: 'Еда и кафе', subtitle: 'Bestellen und bezahlen', glyph: '🍽️' },
+  ...advancedChapters,
 ];
 
 const ex = {
@@ -409,6 +411,7 @@ export const lessons: Lesson[] = [
       ex.speak('e7', 'Я люблю́ ру́сский язы́к.', 'Ich liebe die russische Sprache.'),
     ],
   },
+  ...advancedLessons,
 ];
 
 /* ------------------------------------------------------------- helpers */

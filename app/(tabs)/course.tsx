@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Divider, ListRow, ProgressBar, Screen, SectionLabel, Text } from '@/components/ui';
 import { colors, spacing } from '@/theme/tokens';
-import { buildCourseMap, chapters, chapterProgress, courseProgress, lessons } from '@/data/course';
+import { buildCourseMap, chapters, chapterProgress, courseProgress } from '@/data/course';
+import { levelProgress } from '@/store/selectors';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function CourseScreen() {
@@ -12,6 +13,7 @@ export default function CourseScreen() {
   const completed = useAppStore((state) => state.lessons);
   const map = useMemo(() => buildCourseMap(completed), [completed]);
   const progress = useMemo(() => courseProgress(completed), [completed]);
+  const levels = useMemo(() => levelProgress(completed), [completed]);
 
   return (
     <Screen>
@@ -21,6 +23,25 @@ export default function CourseScreen() {
           {progress.done} von {progress.total} Lektionen · {Math.round(progress.ratio * 100)} %
         </Text>
         <ProgressBar value={progress.ratio} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm }}>
+          {levels.map((entry) => (
+            <View
+              key={entry.level}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: entry.done > 0 ? colors.accent : colors.border,
+                backgroundColor: entry.done > 0 ? colors.accentSoft : 'transparent',
+              }}
+            >
+              <Text variant="caption" tone={entry.done > 0 ? 'accent' : 'tertiary'}>
+                {entry.level} {entry.total === 0 ? '—' : `${entry.done}/${entry.total}`}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={{ marginTop: spacing.xl, gap: spacing.xl }}>
@@ -80,13 +101,10 @@ export default function CourseScreen() {
           );
         })}
 
-        <View>
-          <SectionLabel>Weitere Niveaus</SectionLabel>
-          <Text variant="caption" tone="tertiary">
-            A2 bis C1 folgen auf derselben Kursstruktur. Derzeit sind {lessons.length} Lektionen für A0 und A1
-            vollständig ausformuliert.
-          </Text>
-        </View>
+        <Text variant="caption" tone="tertiary">
+          {progress.total} Lektionen von A0 bis C1. Jede Lektion enthält Vokabeln, Grammatik, Hören, Schreiben und
+          einen Abschlusstest.
+        </Text>
       </View>
     </Screen>
   );

@@ -64,7 +64,7 @@ begrenzt Verlauf und Antwortlänge.
 | --- | --- |
 | Onboarding | 7 Schritte: Sprache, Ziel, Einstufungstest (3 Fragen) oder Start bei null, Tagesziel, Name, Zusammenfassung |
 | Dashboard | Begrüßung, Serie, Tagesziel, Wochenbalken, Empfehlungen, letzte Aktivitäten |
-| Kurs | 6 Kapitel, 12 Lektionen (A0 + A1), sequenzielle Freischaltung, Kapitel- und Gesamtfortschritt |
+| Kurs | 14 Kapitel, 20 Lektionen (A0–C1), sequenzielle Freischaltung, Kapitel- und Gesamtfortschritt |
 | Lektions-Player | 7 Übungstypen: Multiple Choice, Übersetzen (beide Richtungen), Lückentext, Zuordnung, Satzbau, Hören, Sprechen; Auswertung, XP, Wiederholung |
 | Vokabeltrainer | 144 Wörter, Suche, Filter (fällig/gespeichert/schwierig), Detailansicht, Audio, Merkliste, SM-2-Wiederholung |
 | Review-Session | 4 Modi (RU→DE, DE→RU, Multiple Choice, Hören), Bewertung in 4 Stufen, echte SRS-Planung |
@@ -92,8 +92,8 @@ es gibt keine hartcodierten Fortschrittsbalken.
 ### Inhalte
 
 - 33 Buchstaben mit deutschen Lautbeschreibungen, Transkription und Beispielwort
-- 144 Vokabeln (A0/A1) mit Betonung, Transkription, Wortart, Genus, Grammatikhinweis und Beispielsatz
-- 12 Lektionen mit 6–7 Übungen (ca. 80 Übungen), 2 Kapitel-Level
+- 184 Vokabeln (A0–C1) mit Betonung, Transkription, Wortart, Genus, Grammatikhinweis und Beispielsatz
+- 20 Lektionen mit 5–7 Übungen, 6 Niveaus
 - 14 Grammatikthemen, 6 davon die Fälle, jeweils mit Tabellen, Beispielen und 3–4 Übungen
 - 4 Hörtexte mit 2–3 Verständnisfragen
 - 9 Tutor-Szenarien (Café, Restaurant, Einkaufen, Reisen, Schule, Freunde, Alltag, Hotel, Bahnhof)
