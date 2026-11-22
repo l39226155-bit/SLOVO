@@ -36,8 +36,11 @@ jobs:
         working-directory: ios
         run: |
           WORKSPACE=$(ls -d *.xcworkspace | head -1)
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | awk '/Schemes:/{getline; gsub(/^[ \t]+/, ""); print; exit}')
-          test -n "$SCHEME"
+          # The app scheme is the workspace name; the first listed scheme can be a Pod (e.g. boost).
+          SCHEME="${WORKSPACE%.xcworkspace}"
+          xcodebuild -workspace "$WORKSPACE" -list
+          echo "$SCHEME" | grep -qx . || { echo "No scheme name derived"; exit 1; }
+          xcodebuild -workspace "$WORKSPACE" -list | grep -qE "^[[:space:]]*${SCHEME}$" || { echo "Scheme $SCHEME not found in workspace"; exit 1; }
           echo "workspace=$WORKSPACE" >> "$GITHUB_OUTPUT"
           echo "scheme=$SCHEME" >> "$GITHUB_OUTPUT"
           echo "Using $WORKSPACE / $SCHEME"
@@ -50,6 +53,7 @@ jobs:
             -scheme "${{ steps.xcode.outputs.scheme }}" \
             -configuration Release \
             -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -archivePath build/SLOVO.xcarchive \
             archive \
             CODE_SIGNING_ALLOWED=NO \
@@ -58,8 +62,11 @@ jobs:
 
       - name: Package unsigned IPA
         run: |
+          APP_PATH=$(find ios/build/SLOVO.xcarchive/Products/Applications -maxdepth 1 -name '*.app' -print -quit)
+          test -n "$APP_PATH" || { echo "No .app in archive"; find ios/build/SLOVO.xcarchive -maxdepth 3; exit 1; }
+          echo "App: $APP_PATH"
           mkdir -p build/Payload
-          cp -R ios/build/SLOVO.xcarchive/Products/Applications/SLOVO.app build/Payload/
+          cp -R "$APP_PATH" build/Payload/
           cd build
           zip -qry ../SLOVO-unsigned.ipa Payload
           ls -lh ../SLOVO-unsigned.ipa
